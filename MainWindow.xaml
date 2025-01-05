@@ -7,8 +7,20 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button Margin="10,10,624,381" Click="Button_Click">Open Takeout File</Button>
-        <ListView Margin="10,58,10,10" SelectionChanged="ListView_SelectionChanged" Name="FileListView">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Button Click="Button_Click">Open Takeout File</Button>
+        <TreeView Grid.Row="1" Name="DirectoryTree">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                    <TextBlock Text="{Binding Name}" />
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+        <ListView Grid.Row="2" Margin="10,10,10,10" SelectionChanged="ListView_SelectionChanged" Name="FileListView">
             <ListView.View>
                 <GridView>
                     <GridView.Columns>

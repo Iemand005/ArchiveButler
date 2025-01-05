@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Data.SqlClient;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace ArchiveButler
 {
@@ -27,6 +28,7 @@ namespace ArchiveButler
     public partial class MainWindow : Window
     {
         private FileEntryList FileEntries = new FileEntryList();
+        internal ObservableCollection<DirectoryTreeNode> DirectoryTreeNodes { get; set; }
 
         public MainWindow()
         {
@@ -72,9 +74,40 @@ namespace ArchiveButler
                         }
                     }
                     FileListView.ItemsSource = FileEntries.Entries;
+                    DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
+                    DirectoryTree.ItemsSource = DirectoryTreeNodes;
                     //FileListView.Sort()
                 }
             }
+        }
+
+        private ObservableCollection<DirectoryTreeNode> BuildDirectoryTree(FileEntryList fileEntries)
+        {
+            var rootNodes = new ObservableCollection<DirectoryTreeNode>();
+
+            foreach (FileEntry fileEntry in fileEntries.Entries)
+            {
+                var pathSegments = fileEntry.Path.Replace('\\', '/').Split('/');
+                AddPathToTree(rootNodes, pathSegments, 0);
+            }
+
+            return rootNodes;
+        }
+
+        private void AddPathToTree(ObservableCollection<DirectoryTreeNode> currentLevel, string[] segments, int index)
+        {
+            if (index >= segments.Length) return;
+
+            var segment = segments[index];
+            var existingNode = currentLevel.FirstOrDefault(n => n.Name == segment);
+
+            if (existingNode == null)
+            {
+                existingNode = new DirectoryTreeNode { Name = segment };
+                currentLevel.Add(existingNode);
+            }
+
+            AddPathToTree(existingNode.Children, segments, index + 1);
         }
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
