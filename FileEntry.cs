@@ -21,7 +21,14 @@ namespace ArchiveButler
                 return System.IO.Path.GetDirectoryName(FullName);
             }
         }
-        public DateTime? time { get; set; }
+        public DateTime? CreationTime { get; set; }
+        public string CreationTimeString
+        {
+            get
+            {
+                return CreationTime != null ? CreationTime.ToString() : "undefined";
+            }
+        }
         public string FullName { get; set; }
 
         public bool Equals(FileEntry x, FileEntry y)

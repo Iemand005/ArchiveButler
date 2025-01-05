@@ -59,6 +59,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="FileListviewtemComparer.cs" />
     <Compile Include="TakeoutFileEntry.cs" />
     <Compile Include="TakeoutTime.cs" />
     <Page Include="MainWindow.xaml">

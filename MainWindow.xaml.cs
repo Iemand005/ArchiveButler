@@ -16,6 +16,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using System.Data.SqlClient;
+using System.ComponentModel;
 
 namespace ArchiveButler
 {
@@ -24,7 +26,7 @@ namespace ArchiveButler
     /// </summary>
     public partial class MainWindow : Window
     {
-        private FileEntryList fileEntries = new FileEntryList();
+        private FileEntryList FileEntries = new FileEntryList();
 
         public MainWindow()
         {
@@ -43,7 +45,7 @@ namespace ArchiveButler
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         //MessageBox.Show(Path.GetExtension(entry.Name));
-                        if (Path.GetExtension(entry.Name).Equals(".json"))
+                        if (Path.GetExtension(entry.Name).Equals(".json") || false)
                         {
                             //MessageBox.Show(entry.Name);
 
@@ -59,22 +61,45 @@ namespace ArchiveButler
                             {
                                 DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
 
-                                fileEntries.AddEntry(entry.FullName, dateTime);
+                                string newPath = Path.ChangeExtension(entry.FullName, null);
+
+                                FileEntries.AddEntry(newPath, dateTime);
                             }
                         }
                         else
                         {
-                            fileEntries.AddEntry(entry.FullName);
+                            FileEntries.AddEntry(entry.FullName);
                         }
                     }
-                    FileListView.ItemsSource = fileEntries.Entries;
+                    FileListView.ItemsSource = FileEntries.Entries;
+                    //FileListView.Sort()
                 }
             }
         }
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+        }
 
+        private void GridView_ColumnClick(object sender, RoutedEventArgs e)
+        {
+            //ListViewItemComparer sorter = GetListViewSorter(e.Column);
+
+            //listView.ListViewItemSorter = sorter;
+            //listView.Sort();
+            //ICollectionView collectionView = CollectionViewSource.GetDefaultView(FileListView.ItemsSource);
+            //collectionView.SortDescriptions.Clear();
+            //collectionView.SortDescriptions.Add(new SortDescription(
+
+            GridViewColumnHeader column = sender as GridViewColumnHeader;
+
+            ICollectionView collectionView = CollectionViewSource.GetDefaultView(FileListView.ItemsSource);
+            if (collectionView != null)
+            {
+                collectionView.SortDescriptions.Clear();
+                string sortBy = column.Tag.ToString();
+                collectionView.SortDescriptions.Add(new SortDescription(sortBy, ListSortDirection.Ascending));
+            }
         }
     }
 }

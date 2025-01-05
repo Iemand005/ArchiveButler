@@ -29,15 +29,15 @@ namespace ArchiveButler
 
         public void AddEntry(string fullName, DateTime? dateTime)
         {
-            FileEntry entry = new FileEntry { FullName = fullName, time = dateTime };
+            FileEntry entry = new FileEntry { FullName = fullName, CreationTime = dateTime };
             if (!_entries.Contains(entry))
             {
                 _entries.Add(entry);
             }
-            else if (entry.time.HasValue)
+            else if (entry.CreationTime.HasValue)
             {
                 _entries.TryGetValue(entry, out entry);
-                entry.time = dateTime;
+                entry.CreationTime = dateTime;
             }
         }
     }
