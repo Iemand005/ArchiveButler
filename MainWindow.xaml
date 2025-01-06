@@ -47,8 +47,8 @@
           ScrollViewer.CanContentScroll="True"
           ScrollViewer.VerticalScrollBarVisibility="Auto" GridLinesVisibility="Vertical">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Name" x:Name="NameColumn" Binding="{Binding Name, Mode=OneTime}" Width="*" />
-                    <DataGridTextColumn Header="Date" x:Name="DateColumn" Binding="{Binding CreationTimeString, Mode=OneTime}" Width="*" />
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneTime}" Width="*" />
+                    <DataGridTextColumn Header="Date" Binding="{Binding CreationTimeString, Mode=OneTime}"  SortMemberPath="CreationTime" Width="*" />
                 </DataGrid.Columns>
             </DataGrid>
 

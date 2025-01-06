@@ -63,25 +63,16 @@ namespace ArchiveButler
 
                     //});
 
-                    LoadTakeoutArchives(openFileDialog.FileNames, ref FileEntries, (bool isFile) =>
+                    LoadTakeoutArchives(openFileDialog.FileNames, ref FileEntries, (long fileCount, long metaCount) =>
                     {
-                        if (isFile)
+                        Dispatcher.Invoke(new Action(() =>
                         {
-                            Dispatcher.Invoke(new Action(() =>
-                            {
-                                LoadingFileCount++;
-                                NotifyPropertyChanged("LoadingFileCount");
-                            }));
-                        }
-                        else
-                        {
-                            Dispatcher.Invoke(new Action(() =>
-                            {
-                                LoadingMetaCount++;
+                            LoadingFileCount = fileCount;
+                            LoadingMetaCount = metaCount;
 
-                                NotifyPropertyChanged("LoadingMetaCount");
-                            }));
-                        }
+                            NotifyPropertyChanged("LoadingFileCount");
+                            NotifyPropertyChanged("LoadingMetaCount");
+                        }));
                     });
 
                     Dispatcher.Invoke(new Action(() =>
@@ -92,74 +83,16 @@ namespace ArchiveButler
                         DirectoryTree.ItemsSource = DirectoryTreeNodes;
                     }));
                 });
-                //foreach (string fileName in openFileDialog.FileNames)
-                //{
-                //    ZipArchive archive = ZipFile.Open(fileName, ZipArchiveMode.Read);
-
-                //    zipArchives.Add(archive);
-                //    foreach (ZipArchiveEntry entry in archive.Entries)
-                //    {
-                //        if (Path.GetExtension(entry.Name).Equals(".json"))
-                //        {
-                //            if (LoadFileDates)
-                //            {
-
-
-
-                //                JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
-                //                {
-                //                    PropertyNameCaseInsensitive = true
-                //                };
-
-                //                TakeoutFileEntry fileEntry = new TakeoutFileEntry();
-
-                //                try
-                //                {
-
-                //                    fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
-                //                }
-                //                catch
-                //                { }
-
-
-                //                if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
-                //                {
-                //                    DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
-
-                //                    string newPath = Path.ChangeExtension(entry.FullName, null);
-
-                //                    FileEntries.AddEntry(newPath, dateTime);
-                //                }
-                //                else FileEntries.AddEntry(entry.FullName, entry);
-                //            }
-                //        }
-                //        else
-                //        {
-                //            FileEntries.AddEntry(entry.FullName, entry);
-                //        }
-                //    }
-                //    FileListView.ItemsSource = FileEntries.Entries;
-                //    NotifyPropertyChanged("FileCount");
-                //    DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
-                //    DirectoryTree.ItemsSource = DirectoryTreeNodes;
-                //}
             }
         }
 
-        public delegate void EntryLoadedCallBack(bool isFile);
+        public delegate void EntryLoadedCallBack(long fileCount, long metaCount);
 
-        //private async Task LoadTakeoutFiles(string[] fileNames, EntryLoadedCallBack entryLoaded)
-        //{
-        //    LoadTakeoutArchives(fileNames, ref FileEntries);
-        //    FileListView.ItemsSource = FileEntries.Entries;
-        //    NotifyPropertyChanged("FileCount");
-        //    DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
-        //    DirectoryTree.ItemsSource = DirectoryTreeNodes;
-        //}
-
-        private void LoadTakeoutArchives(string[] fileNames, ref FileEntryList fileList, EntryLoadedCallBack entryLoaded)
+        private void LoadTakeoutArchives(string[] fileNames, ref FileEntryList fileList, EntryLoadedCallBack entryLoaded, ulong callbackInterval = 1000)
         {
-
+            long fileCount = 0;
+            long metaCount = 0;
+            ulong iteration = 0;
             foreach (string fileName in fileNames)
             {
 
@@ -172,9 +105,6 @@ namespace ArchiveButler
                     {
                         if (LoadFileDates)
                         {
-
-
-
                             JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
                             {
                                 PropertyNameCaseInsensitive = true
@@ -184,7 +114,6 @@ namespace ArchiveButler
 
                             try
                             {
-
                                 fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
                             }
                             catch { }
@@ -200,16 +129,24 @@ namespace ArchiveButler
                                 isFile = false;
                             }
                         }
+                        else isFile = false;
                     }
 
                     if (isFile)
                     {
                         FileEntries.AddEntry(entry.FullName, entry);
-                    }
+                        fileCount++;
+                    } else metaCount++;
 
-                    entryLoaded(isFile);
+                    iteration++;
+                    if (iteration == callbackInterval)
+                    {
+                        iteration = 0;
+                        entryLoaded(fileCount, metaCount);
+                    }
                 }
             }
+            entryLoaded(fileCount, metaCount);
         }
 
         private ObservableCollection<DirectoryTreeNode> BuildDirectoryTree(FileEntryList fileEntries)
