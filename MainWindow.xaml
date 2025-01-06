@@ -24,7 +24,7 @@
                 </TreeView.ItemTemplate>
             </TreeView>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
-            <ListView Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView" HorizontalAlignment="Center" Width="264">
+            <ListView Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView">
                 <ListView.View>
                     <GridView>
                         <GridView.Columns>
@@ -53,7 +53,7 @@
                 </ListView.View>
             </ListView>
             <GridSplitter Grid.Column="3" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
-            <Grid Name="EntryPreview">
+            <Grid Grid.Column="4" Name="EntryPreview">
                 
             </Grid>
         </Grid>

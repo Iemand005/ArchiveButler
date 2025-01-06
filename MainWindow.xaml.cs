@@ -41,7 +41,7 @@ namespace ArchiveButler
             OpenFileDialog openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog(this) ?? false)
             {
-                MessageBox.Show(openFileDialog.FileName);
+                //MessageBox.Show(openFileDialog.FileName);
 
                 ZipArchive archive = ZipFile.Open(openFileDialog.FileName, ZipArchiveMode.Read);
                 {
@@ -126,16 +126,35 @@ namespace ArchiveButler
             return bitmap;
         }
 
+        private Dictionary<FileEntry, UIElement> elements = new Dictionary<FileEntry, UIElement>();
+
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            FileEntry entry = e.AddedItems[0] as FileEntry;
-            Stream fileStream = entry.ZipEntry.Open();
+            //FileEntry entry = e.AddedItems[0] as FileEntry;
+            //Stream fileStream = entry.ZipEntry.Open();
 
-            Image image = new Image();
-            image.Source = LoadImageFromStream(fileStream);
+            //var listView = e.Source as ListView;
+            //listView.SelectedItems
 
-            EntryPreview.Children.Clear();
-            EntryPreview.Children.Add(image);
+
+            //EntryPreview.Children.Clear();
+            foreach (FileEntry item in e.RemovedItems)
+            {
+                if (elements.ContainsKey(item)) EntryPreview.Children.Remove(elements[item]);
+            }
+
+            foreach (FileEntry entry in e.AddedItems)
+            {
+                if (entry.ZipEntry != null)
+                {
+                    Stream fileStream = entry.ZipEntry.Open();
+                    Image image = new Image();
+                    image.Source = LoadImageFromStream(fileStream);
+
+                    EntryPreview.Children.Add(image);
+                    elements[entry] = image;
+                }
+            }
         }
 
         private void GridView_ColumnClick(object sender, RoutedEventArgs e)
