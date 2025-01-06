@@ -12,7 +12,15 @@
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Button Click="Button_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,5">Open Takeout File</Button>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Click="Button_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,5">Open Takeout File</Button>
+
+            <CheckBox Grid.Column="1" Margin="5,0" VerticalAlignment="Center" IsChecked="{Binding LoadFileDates, ElementName=Window}">Load dates</CheckBox>
+        </Grid>
         <Grid Grid.Row="1" Margin="0,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -30,44 +38,6 @@
             </TreeView>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
 
-            <!--<ListView Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView"
-                      VirtualizingStackPanel.IsVirtualizing="True"
-          VirtualizingStackPanel.VirtualizationMode="Recycling"
-          ScrollViewer.CanContentScroll="True"
-          ScrollViewer.VerticalScrollBarVisibility="Auto">
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-                <ListView.View>
-                    <GridView>
-                        <GridView.Columns>
-                            <GridViewColumn>
-                                <GridViewColumn.Header>
-                                    <DataGridColumnHeader Tag="Name" Click="GridView_ColumnClick">Name</DataGridColumnHeader>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name, Mode=OneTime, IsAsync=True}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn>
-                                <GridViewColumn.Header>
-                                    <DataGridColumnHeader Tag="CreationTime" Click="GridView_ColumnClick">Date</DataGridColumnHeader>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding CreationTimeString, Mode=OneTime, IsAsync=True}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView.Columns>
-                    </GridView>
-                </ListView.View>
-            </ListView>-->
-
             <DataGrid Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView"
           AutoGenerateColumns="False"
           VirtualizingPanel.IsVirtualizing="True"
@@ -75,13 +45,10 @@
           EnableRowVirtualization="True"
           EnableColumnVirtualization="True"
           ScrollViewer.CanContentScroll="True"
-          ScrollViewer.VerticalScrollBarVisibility="Auto">
+          ScrollViewer.VerticalScrollBarVisibility="Auto" GridLinesVisibility="Vertical">
                 <DataGrid.Columns>
-                    <!-- Name Column -->
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneTime, IsAsync=False}" Width="*" />
-
-                    <!-- Date Column -->
-                    <DataGridTextColumn Header="Date" Binding="{Binding CreationTimeString, Mode=OneTime, IsAsync=False}" Width="*" />
+                    <DataGridTextColumn Header="Name" x:Name="NameColumn" Binding="{Binding Name, Mode=OneTime}" Width="*" />
+                    <DataGridTextColumn Header="Date" x:Name="DateColumn" Binding="{Binding CreationTimeString, Mode=OneTime}" Width="*" />
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -93,11 +60,14 @@
             </Grid>
         </Grid>
         <StatusBar Grid.Row="2">
-            <StatusBarItem Content="{Binding FileCount, ElementName=Window}">
-                
-            </StatusBarItem>
+            <StatusBarItem Content="{Binding FileCount, ElementName=Window}"/>
+
+
             <Separator></Separator>
-            <StatusBarItem></StatusBarItem>
+            <StatusBarItem Content="{Binding LoadingFileCount, ElementName=Window}"/>
+            <Separator></Separator>
+            <StatusBarItem Content="{Binding LoadingMetaCount, ElementName=Window}"/>
+
         </StatusBar>
     </Grid>
 </Window>

@@ -33,7 +33,7 @@ namespace ArchiveButler
         private List<ZipArchive> zipArchives { get; set; } = new List<ZipArchive>();
         private ObservableCollection<DirectoryTreeNode> rootNodes = new ObservableCollection<DirectoryTreeNode>();
 
-        private bool LoadFileDates { get; set; } = false;
+        public bool LoadFileDates { get; set; } = false;
 
         public long FileCount {
             get
@@ -41,6 +41,9 @@ namespace ArchiveButler
                 return FileEntries.Entries.Count;
             }
         }
+
+        public long LoadingFileCount { get; set; } = 0;
+        public long LoadingMetaCount { get; set; } = 0;
 
         public MainWindow()
         {
@@ -53,15 +56,124 @@ namespace ArchiveButler
             openFileDialog.Multiselect = true;
             if (openFileDialog.ShowDialog(this) ?? false)
             {
-                foreach (string fileName in openFileDialog.FileNames)
+                Task.Factory.StartNew(() =>
                 {
-                    ZipArchive archive = ZipFile.Open(fileName, ZipArchiveMode.Read);
+                    //LoadTakeoutFiles(openFileDialog.FileNames, () =>
+                    //{
 
-                    zipArchives.Add(archive);
-                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    //});
+
+                    LoadTakeoutArchives(openFileDialog.FileNames, ref FileEntries, (bool isFile) =>
                     {
-                        if (Path.GetExtension(entry.Name).Equals(".json") && LoadFileDates)
+                        if (isFile)
                         {
+                            Dispatcher.Invoke(new Action(() =>
+                            {
+                                LoadingFileCount++;
+                                NotifyPropertyChanged("LoadingFileCount");
+                            }));
+                        }
+                        else
+                        {
+                            Dispatcher.Invoke(new Action(() =>
+                            {
+                                LoadingMetaCount++;
+
+                                NotifyPropertyChanged("LoadingMetaCount");
+                            }));
+                        }
+                    });
+
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        FileListView.ItemsSource = FileEntries.Entries;
+                        NotifyPropertyChanged("FileCount");
+                        DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
+                        DirectoryTree.ItemsSource = DirectoryTreeNodes;
+                    }));
+                });
+                //foreach (string fileName in openFileDialog.FileNames)
+                //{
+                //    ZipArchive archive = ZipFile.Open(fileName, ZipArchiveMode.Read);
+
+                //    zipArchives.Add(archive);
+                //    foreach (ZipArchiveEntry entry in archive.Entries)
+                //    {
+                //        if (Path.GetExtension(entry.Name).Equals(".json"))
+                //        {
+                //            if (LoadFileDates)
+                //            {
+
+
+
+                //                JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+                //                {
+                //                    PropertyNameCaseInsensitive = true
+                //                };
+
+                //                TakeoutFileEntry fileEntry = new TakeoutFileEntry();
+
+                //                try
+                //                {
+
+                //                    fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
+                //                }
+                //                catch
+                //                { }
+
+
+                //                if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
+                //                {
+                //                    DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
+
+                //                    string newPath = Path.ChangeExtension(entry.FullName, null);
+
+                //                    FileEntries.AddEntry(newPath, dateTime);
+                //                }
+                //                else FileEntries.AddEntry(entry.FullName, entry);
+                //            }
+                //        }
+                //        else
+                //        {
+                //            FileEntries.AddEntry(entry.FullName, entry);
+                //        }
+                //    }
+                //    FileListView.ItemsSource = FileEntries.Entries;
+                //    NotifyPropertyChanged("FileCount");
+                //    DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
+                //    DirectoryTree.ItemsSource = DirectoryTreeNodes;
+                //}
+            }
+        }
+
+        public delegate void EntryLoadedCallBack(bool isFile);
+
+        //private async Task LoadTakeoutFiles(string[] fileNames, EntryLoadedCallBack entryLoaded)
+        //{
+        //    LoadTakeoutArchives(fileNames, ref FileEntries);
+        //    FileListView.ItemsSource = FileEntries.Entries;
+        //    NotifyPropertyChanged("FileCount");
+        //    DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
+        //    DirectoryTree.ItemsSource = DirectoryTreeNodes;
+        //}
+
+        private void LoadTakeoutArchives(string[] fileNames, ref FileEntryList fileList, EntryLoadedCallBack entryLoaded)
+        {
+
+            foreach (string fileName in fileNames)
+            {
+
+                ZipArchive archive = ZipFile.Open(fileName, ZipArchiveMode.Read);
+
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    bool isFile = true;
+                    if (Path.GetExtension(entry.Name).Equals(".json"))
+                    {
+                        if (LoadFileDates)
+                        {
+
+
 
                             JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
                             {
@@ -73,9 +185,9 @@ namespace ArchiveButler
                             try
                             {
 
-                            fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
-                            } catch
-                            { }
+                                fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
+                            }
+                            catch { }
 
 
                             if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
@@ -85,69 +197,18 @@ namespace ArchiveButler
                                 string newPath = Path.ChangeExtension(entry.FullName, null);
 
                                 FileEntries.AddEntry(newPath, dateTime);
+                                isFile = false;
                             }
-                            else FileEntries.AddEntry(entry.FullName, entry);
-                        }
-                        else
-                        {
-                            FileEntries.AddEntry(entry.FullName, entry);
                         }
                     }
-                    FileListView.ItemsSource = FileEntries.Entries;
-                    NotifyPropertyChanged("FileCount");
-                    DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
-                    DirectoryTree.ItemsSource = DirectoryTreeNodes;
-                }
-            }
-        }
 
-        private async Task LoadTakeoutFiles(string[] fileNames)
-        {
-            foreach (string fileName in fileNames)
-            {
-                ZipArchive archive = ZipFile.Open(fileName, ZipArchiveMode.Read);
-
-                zipArchives.Add(archive);
-                foreach (ZipArchiveEntry entry in archive.Entries)
-                {
-                    if (Path.GetExtension(entry.Name).Equals(".json") && LoadFileDates)
-                    {
-
-                        JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        };
-
-                        TakeoutFileEntry fileEntry = new TakeoutFileEntry();
-
-                        try
-                        {
-
-                            fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
-                        }
-                        catch
-                        { }
-
-
-                        if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
-                        {
-                            DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
-
-                            string newPath = Path.ChangeExtension(entry.FullName, null);
-
-                            FileEntries.AddEntry(newPath, dateTime);
-                        }
-                        else FileEntries.AddEntry(entry.FullName, entry);
-                    }
-                    else
+                    if (isFile)
                     {
                         FileEntries.AddEntry(entry.FullName, entry);
                     }
+
+                    entryLoaded(isFile);
                 }
-                FileListView.ItemsSource = FileEntries.Entries;
-                NotifyPropertyChanged("FileCount");
-                DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
-                DirectoryTree.ItemsSource = DirectoryTreeNodes;
             }
         }
 
@@ -226,9 +287,25 @@ namespace ArchiveButler
             ICollectionView collectionView = CollectionViewSource.GetDefaultView(FileListView.ItemsSource);
             if (collectionView != null)
             {
+                string sortBy = "Name";
+                switch (column.Name)
+                {
+                    case "DateColumn":
+                        sortBy = "CreationTime";
+                        break;
+                }
+                
+                ListSortDirection direction = ListSortDirection.Ascending;
+                if (collectionView.SortDescriptions.Count > 0)
+                {
+                    SortDescription sortDescription = collectionView.SortDescriptions[0];
+                    direction = sortDescription.Direction;
+                    if (sortDescription.PropertyName == sortBy)
+                        direction = direction == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+                }
                 collectionView.SortDescriptions.Clear();
-                string sortBy = column.Tag.ToString();
-                collectionView.SortDescriptions.Add(new SortDescription(sortBy, ListSortDirection.Ascending));
+                
+                collectionView.SortDescriptions.Add(new SortDescription(sortBy, direction));
             }
         }
 
