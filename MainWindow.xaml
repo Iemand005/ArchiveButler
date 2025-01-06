@@ -24,36 +24,31 @@
                 </TreeView.ItemTemplate>
             </TreeView>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
-            <ListView Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView" VirtualizingStackPanel.IsVirtualizing="True"
-          VirtualizingStackPanel.VirtualizationMode="Recycling"
-          ScrollViewer.IsDeferredScrollingEnabled="True">
-                <ListView.View>
-                    <GridView>
-                        <GridView.Columns>
-                            <GridViewColumn>
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="Name" Click="GridView_ColumnClick">Name</GridViewColumnHeader>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn>
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Tag="CreationTime" Click="GridView_ColumnClick">Date</GridViewColumnHeader>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding CreationTimeString}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView.Columns>
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            
+            <DataGrid Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn>
+                        <DataGridTemplateColumn.Header>
+                            <DataGridColumnHeader Tag="Name" Click="GridView_ColumnClick">Name</DataGridColumnHeader>
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name, Mode=OneTime, IsAsync=True}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn>
+                        <DataGridTemplateColumn.Header>
+                            <DataGridColumnHeader Tag="CreationTime" Click="GridView_ColumnClick">Date</DataGridColumnHeader>
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding CreationTimeString, Mode=OneTime, IsAsync=True}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
             <GridSplitter Grid.Column="3" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
             <Grid Grid.Column="4" Name="EntryPreview">
                 

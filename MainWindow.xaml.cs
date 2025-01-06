@@ -19,6 +19,7 @@ using System.Text.Json.Serialization.Metadata;
 using System.Data.SqlClient;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Windows.Controls.Primitives;
 
 namespace ArchiveButler
 {
@@ -162,7 +163,7 @@ namespace ArchiveButler
 
         private void GridView_ColumnClick(object sender, RoutedEventArgs e)
         {
-            GridViewColumnHeader column = sender as GridViewColumnHeader;
+            DataGridColumnHeader column = sender as DataGridColumnHeader;
 
             ICollectionView collectionView = CollectionViewSource.GetDefaultView(FileListView.ItemsSource);
             if (collectionView != null)
