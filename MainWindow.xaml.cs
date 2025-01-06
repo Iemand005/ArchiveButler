@@ -26,7 +26,7 @@ namespace ArchiveButler
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private FileEntryList FileEntries = new FileEntryList();
         internal ObservableCollection<DirectoryTreeNode> DirectoryTreeNodes { get; set; }
@@ -34,6 +34,13 @@ namespace ArchiveButler
         private ObservableCollection<DirectoryTreeNode> rootNodes = new ObservableCollection<DirectoryTreeNode>();
 
         private bool LoadFileDates { get; set; } = false;
+
+        public long FileCount {
+            get
+            {
+                return FileEntries.Entries.Count;
+            }
+        }
 
         public MainWindow()
         {
@@ -87,9 +94,60 @@ namespace ArchiveButler
                         }
                     }
                     FileListView.ItemsSource = FileEntries.Entries;
+                    NotifyPropertyChanged("FileCount");
                     DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
                     DirectoryTree.ItemsSource = DirectoryTreeNodes;
                 }
+            }
+        }
+
+        private async Task LoadTakeoutFiles(string[] fileNames)
+        {
+            foreach (string fileName in fileNames)
+            {
+                ZipArchive archive = ZipFile.Open(fileName, ZipArchiveMode.Read);
+
+                zipArchives.Add(archive);
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    if (Path.GetExtension(entry.Name).Equals(".json") && LoadFileDates)
+                    {
+
+                        JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        };
+
+                        TakeoutFileEntry fileEntry = new TakeoutFileEntry();
+
+                        try
+                        {
+
+                            fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
+                        }
+                        catch
+                        { }
+
+
+                        if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
+                        {
+                            DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
+
+                            string newPath = Path.ChangeExtension(entry.FullName, null);
+
+                            FileEntries.AddEntry(newPath, dateTime);
+                        }
+                        else FileEntries.AddEntry(entry.FullName, entry);
+                    }
+                    else
+                    {
+                        FileEntries.AddEntry(entry.FullName, entry);
+                    }
+                }
+                FileListView.ItemsSource = FileEntries.Entries;
+                NotifyPropertyChanged("FileCount");
+                DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
+                DirectoryTree.ItemsSource = DirectoryTreeNodes;
             }
         }
 
@@ -173,5 +231,12 @@ namespace ArchiveButler
                 collectionView.SortDescriptions.Add(new SortDescription(sortBy, ListSortDirection.Ascending));
             }
         }
+
+        protected void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

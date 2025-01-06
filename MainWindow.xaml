@@ -5,10 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ArchiveButler"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Button Click="Button_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10">Open Takeout File</Button>
-        <Grid Margin="10,35,10,10">
+        Title="MainWindow" Height="450" Width="800" Name="Window">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Button Click="Button_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,5">Open Takeout File</Button>
+        <Grid Grid.Row="1" Margin="0,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -24,35 +29,75 @@
                 </TreeView.ItemTemplate>
             </TreeView>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
-            
-            <DataGrid Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView">
+
+            <!--<ListView Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView"
+                      VirtualizingStackPanel.IsVirtualizing="True"
+          VirtualizingStackPanel.VirtualizationMode="Recycling"
+          ScrollViewer.CanContentScroll="True"
+          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.View>
+                    <GridView>
+                        <GridView.Columns>
+                            <GridViewColumn>
+                                <GridViewColumn.Header>
+                                    <DataGridColumnHeader Tag="Name" Click="GridView_ColumnClick">Name</DataGridColumnHeader>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name, Mode=OneTime, IsAsync=True}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn>
+                                <GridViewColumn.Header>
+                                    <DataGridColumnHeader Tag="CreationTime" Click="GridView_ColumnClick">Date</DataGridColumnHeader>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding CreationTimeString, Mode=OneTime, IsAsync=True}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView.Columns>
+                    </GridView>
+                </ListView.View>
+            </ListView>-->
+
+            <DataGrid Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView"
+          AutoGenerateColumns="False"
+          VirtualizingPanel.IsVirtualizing="True"
+          VirtualizingPanel.VirtualizationMode="Recycling"
+          EnableRowVirtualization="True"
+          EnableColumnVirtualization="True"
+          ScrollViewer.CanContentScroll="True"
+          ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn>
-                        <DataGridTemplateColumn.Header>
-                            <DataGridColumnHeader Tag="Name" Click="GridView_ColumnClick">Name</DataGridColumnHeader>
-                        </DataGridTemplateColumn.Header>
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name, Mode=OneTime, IsAsync=True}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn>
-                        <DataGridTemplateColumn.Header>
-                            <DataGridColumnHeader Tag="CreationTime" Click="GridView_ColumnClick">Date</DataGridColumnHeader>
-                        </DataGridTemplateColumn.Header>
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding CreationTimeString, Mode=OneTime, IsAsync=True}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    <!-- Name Column -->
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneTime, IsAsync=False}" Width="*" />
+
+                    <!-- Date Column -->
+                    <DataGridTextColumn Header="Date" Binding="{Binding CreationTimeString, Mode=OneTime, IsAsync=False}" Width="*" />
                 </DataGrid.Columns>
             </DataGrid>
+
+
+
             <GridSplitter Grid.Column="3" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
             <Grid Grid.Column="4" Name="EntryPreview">
                 
             </Grid>
         </Grid>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem Content="{Binding FileCount, ElementName=Window}">
+                
+            </StatusBarItem>
+            <Separator></Separator>
+            <StatusBarItem></StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>
