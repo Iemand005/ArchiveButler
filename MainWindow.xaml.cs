@@ -29,6 +29,7 @@ namespace ArchiveButler
     {
         private FileEntryList FileEntries = new FileEntryList();
         internal ObservableCollection<DirectoryTreeNode> DirectoryTreeNodes { get; set; }
+        private List<ZipArchive> zipArchives { get; set; } = new List<ZipArchive>();
 
         public MainWindow()
         {
@@ -42,8 +43,9 @@ namespace ArchiveButler
             {
                 MessageBox.Show(openFileDialog.FileName);
 
-                using (ZipArchive archive = ZipFile.Open(openFileDialog.FileName, ZipArchiveMode.Read))
+                ZipArchive archive = ZipFile.Open(openFileDialog.FileName, ZipArchiveMode.Read);
                 {
+                    zipArchives.Add(archive);
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         //MessageBox.Show(Path.GetExtension(entry.Name));
@@ -70,7 +72,7 @@ namespace ArchiveButler
                         }
                         else
                         {
-                            FileEntries.AddEntry(entry.FullName);
+                            FileEntries.AddEntry(entry.FullName, entry);
                         }
                     }
                     FileListView.ItemsSource = FileEntries.Entries;
@@ -110,8 +112,30 @@ namespace ArchiveButler
             AddPathToTree(existingNode.Children, segments, index + 1);
         }
 
+        private BitmapImage LoadImageFromStream(Stream stream)
+        {
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad; // Ensures the stream can be closed after loading
+            bitmap.StreamSource = stream;
+            bitmap.EndInit();
+            if (bitmap.CanFreeze)
+            {
+                bitmap.Freeze();
+            }//bitmap.Freeze(); // Makes the image thread-safe
+            return bitmap;
+        }
+
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            FileEntry entry = e.AddedItems[0] as FileEntry;
+            Stream fileStream = entry.ZipEntry.Open();
+
+            Image image = new Image();
+            image.Source = LoadImageFromStream(fileStream);
+
+            EntryPreview.Children.Clear();
+            EntryPreview.Children.Add(image);
         }
 
         private void GridView_ColumnClick(object sender, RoutedEventArgs e)

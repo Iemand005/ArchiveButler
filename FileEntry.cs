@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.IO.Compression;
 
 namespace ArchiveButler
 {
@@ -22,6 +23,7 @@ namespace ArchiveButler
             }
         }
         public DateTime? CreationTime { get; set; }
+        public ZipArchiveEntry ZipEntry { get; set; }
         public string CreationTimeString
         {
             get
