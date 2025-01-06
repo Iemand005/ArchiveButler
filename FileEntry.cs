@@ -5,17 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.IO.Compression;
+using System.Text.Json.Serialization;
 
 namespace ArchiveButler
 {
     internal class FileEntry
     {
+        [JsonIgnore]
         public string Name {
             get
             {
                 return System.IO.Path.GetFileName(FullName);
             }
         }
+        [JsonIgnore]
         public string Path {
             get
             {
@@ -23,7 +26,11 @@ namespace ArchiveButler
             }
         }
         public DateTime? CreationTime { get; set; }
+
+        [JsonIgnore]
         public ZipArchiveEntry ZipEntry { get; set; }
+
+        [JsonIgnore]
         public string CreationTimeString
         {
             get
@@ -32,6 +39,17 @@ namespace ArchiveButler
             }
         }
         public string FullName { get; set; }
+
+        public long Size { get; set; }
+
+        public FileEntry() { }
+
+        public FileEntry(ZipArchiveEntry entry)
+        {
+            FullName = entry.FullName;
+            Size = entry.Length;
+            ZipEntry = entry;
+        }
 
         // override object.Equals
         public override bool Equals(object obj)

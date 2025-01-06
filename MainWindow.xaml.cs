@@ -48,6 +48,13 @@ namespace ArchiveButler
         public MainWindow()
         {
             InitializeComponent();
+
+            var a = LoadDatabase();
+            FileEntries.Merge(a);
+            NotifyPropertyChanged("FileEntries");
+            NotifyPropertyChanged("FileEntries.Entries");
+            NotifyPropertyChanged("FileCount");
+            FileListView.ItemsSource = FileEntries.Entries;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -58,11 +65,6 @@ namespace ArchiveButler
             {
                 Task.Factory.StartNew(() =>
                 {
-                    //LoadTakeoutFiles(openFileDialog.FileNames, () =>
-                    //{
-
-                    //});
-
                     LoadTakeoutArchives(openFileDialog.FileNames, ref FileEntries, (long fileCount, long metaCount) =>
                     {
                         Dispatcher.Invoke(new Action(() =>
@@ -77,8 +79,10 @@ namespace ArchiveButler
 
                     Dispatcher.Invoke(new Action(() =>
                     {
-                        FileListView.ItemsSource = FileEntries.Entries;
+                        //FileListView.ItemsSource = FileEntries.Entries;
                         NotifyPropertyChanged("FileCount");
+                        NotifyPropertyChanged("FileEntries");
+
                         DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
                         DirectoryTree.ItemsSource = DirectoryTreeNodes;
                     }));
@@ -105,28 +109,33 @@ namespace ArchiveButler
                     {
                         if (LoadFileDates)
                         {
-                            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+                            string newPath = Path.ChangeExtension(entry.FullName, null);
+                            FileEntry fileEntry1 = FileEntries.GetEntry(entry);
+                            if (fileEntry1 == null || !fileEntry1.CreationTime.HasValue)
                             {
-                                PropertyNameCaseInsensitive = true
-                            };
 
-                            TakeoutFileEntry fileEntry = new TakeoutFileEntry();
+                                JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+                                {
+                                    PropertyNameCaseInsensitive = true
+                                };
 
-                            try
-                            {
-                                fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
-                            }
-                            catch { }
+                                TakeoutFileEntry fileEntry = new TakeoutFileEntry();
+
+                                try
+                                {
+                                    fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
+                                }
+                                catch { }
 
 
-                            if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
-                            {
-                                DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
+                                if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
+                                {
+                                    DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
 
-                                string newPath = Path.ChangeExtension(entry.FullName, null);
 
-                                FileEntries.AddEntry(newPath, dateTime);
-                                isFile = false;
+                                    FileEntries.AddEntry(newPath, dateTime);
+                                    isFile = false;
+                                }
                             }
                         }
                         else isFile = false;
@@ -134,7 +143,7 @@ namespace ArchiveButler
 
                     if (isFile)
                     {
-                        FileEntries.AddEntry(entry.FullName, entry);
+                        FileEntries.AddEntry(entry);
                         fileCount++;
                     } else metaCount++;
 
@@ -145,8 +154,21 @@ namespace ArchiveButler
                         entryLoaded(fileCount, metaCount);
                     }
                 }
+                SaveDatabase(FileEntries);
             }
             entryLoaded(fileCount, metaCount);
+        }
+
+        public string DatabaseName { get; set; } = "database.json";
+
+        private void SaveDatabase(FileEntryList fileEntries)
+        {
+            File.WriteAllText(DatabaseName, JsonSerializer.Serialize(fileEntries));
+        }
+
+        private FileEntryList LoadDatabase()
+        {
+            return File.Exists(DatabaseName) ? JsonSerializer.Deserialize<FileEntryList>(File.ReadAllText(DatabaseName)) : new FileEntryList();
         }
 
         private ObservableCollection<DirectoryTreeNode> BuildDirectoryTree(FileEntryList fileEntries)
@@ -154,6 +176,7 @@ namespace ArchiveButler
             foreach (FileEntry fileEntry in fileEntries.Entries)
             {
                 var pathSegments = fileEntry.Path.Replace('\\', '/').Split('/');
+                pathSegments = fileEntry.FullName.Split('/');
                 AddPathToTree(rootNodes, pathSegments, 0);
             }
 

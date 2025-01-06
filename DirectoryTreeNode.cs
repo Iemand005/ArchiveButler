@@ -11,5 +11,6 @@ namespace ArchiveButler
     {
         public string Name { get; set; }
         public ObservableCollection<DirectoryTreeNode> Children { get; set; } = new ObservableCollection<DirectoryTreeNode>();
+        public FileEntryList Files { get; set; } = new FileEntryList();
     }
 }

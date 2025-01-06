@@ -16,6 +16,10 @@ namespace ArchiveButler
             {
                 return _entries.ToList();
             }
+            set
+            {
+                Merge(value);
+            }
         }
 
         public FileEntryList()
@@ -33,13 +37,13 @@ namespace ArchiveButler
             return AddEntry(new FileEntry { FullName = fullName });
         }
 
-        public void AddEntry(string fullName, ZipArchiveEntry zipEntry)
+        public void AddEntry(ZipArchiveEntry entry)
         {
-            FileEntry fileEntry = new FileEntry { FullName = fullName, ZipEntry = zipEntry };
+            FileEntry fileEntry = new FileEntry(entry);
             if (!AddEntry(fileEntry) && fileEntry.CreationTime.HasValue)
             {
                 _entries.TryGetValue(fileEntry, out fileEntry);
-                fileEntry.ZipEntry = zipEntry;
+                fileEntry.ZipEntry = entry;
             }
         }
 
@@ -51,6 +55,23 @@ namespace ArchiveButler
                 _entries.TryGetValue(entry, out entry);
                 entry.CreationTime = dateTime;
             }
+        }
+
+        public void Merge(FileEntryList fileEntryList)
+        {
+            Merge(fileEntryList.Entries);
+        }
+
+        public void Merge(List<FileEntry> fileEntryList)
+        {
+            foreach (FileEntry entry in fileEntryList) AddEntry(entry);
+        }
+
+        internal FileEntry GetEntry(ZipArchiveEntry archiveEntry)
+        {
+            FileEntry fileEntry = new FileEntry(archiveEntry);
+            _entries.TryGetValue(fileEntry, out fileEntry);
+            return fileEntry;
         }
     }
 }

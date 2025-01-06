@@ -38,7 +38,7 @@
             </TreeView>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
 
-            <DataGrid Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView"
+            <DataGrid Grid.Column="2" SelectionChanged="ListView_SelectionChanged" ItemsSource="{Binding FileEntries.Entries, ElementName=Window}" Name="FileListView"
           AutoGenerateColumns="False"
           VirtualizingPanel.IsVirtualizing="True"
           VirtualizingPanel.VirtualizationMode="Recycling"
