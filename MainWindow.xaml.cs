@@ -30,6 +30,9 @@ namespace ArchiveButler
         private FileEntryList FileEntries = new FileEntryList();
         internal ObservableCollection<DirectoryTreeNode> DirectoryTreeNodes { get; set; }
         private List<ZipArchive> zipArchives { get; set; } = new List<ZipArchive>();
+        private ObservableCollection<DirectoryTreeNode> rootNodes = new ObservableCollection<DirectoryTreeNode>();
+
+        private bool LoadFileDates { get; set; } = false;
 
         public MainWindow()
         {
@@ -39,28 +42,34 @@ namespace ArchiveButler
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Multiselect = true;
             if (openFileDialog.ShowDialog(this) ?? false)
             {
-                //MessageBox.Show(openFileDialog.FileName);
-
-                ZipArchive archive = ZipFile.Open(openFileDialog.FileName, ZipArchiveMode.Read);
+                foreach (string fileName in openFileDialog.FileNames)
                 {
+                    ZipArchive archive = ZipFile.Open(fileName, ZipArchiveMode.Read);
+
                     zipArchives.Add(archive);
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        //MessageBox.Show(Path.GetExtension(entry.Name));
-                        if (Path.GetExtension(entry.Name).Equals(".json") || false)
+                        if (Path.GetExtension(entry.Name).Equals(".json") && LoadFileDates)
                         {
-                            //MessageBox.Show(entry.Name);
 
                             JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
                             {
                                 PropertyNameCaseInsensitive = true
                             };
 
-                            TakeoutFileEntry fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
+                            TakeoutFileEntry fileEntry = new TakeoutFileEntry();
 
-                            //MessageBox.Show(fileEntry.Title);
+                            try
+                            {
+
+                            fileEntry = JsonSerializer.Deserialize<TakeoutFileEntry>(entry.Open(), jsonSerializerOptions);
+                            } catch
+                            { }
+
+
                             if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
                             {
                                 DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
@@ -69,6 +78,7 @@ namespace ArchiveButler
 
                                 FileEntries.AddEntry(newPath, dateTime);
                             }
+                            else FileEntries.AddEntry(entry.FullName, entry);
                         }
                         else
                         {
@@ -78,15 +88,12 @@ namespace ArchiveButler
                     FileListView.ItemsSource = FileEntries.Entries;
                     DirectoryTreeNodes = BuildDirectoryTree(FileEntries);
                     DirectoryTree.ItemsSource = DirectoryTreeNodes;
-                    //FileListView.Sort()
                 }
             }
         }
 
         private ObservableCollection<DirectoryTreeNode> BuildDirectoryTree(FileEntryList fileEntries)
         {
-            var rootNodes = new ObservableCollection<DirectoryTreeNode>();
-
             foreach (FileEntry fileEntry in fileEntries.Entries)
             {
                 var pathSegments = fileEntry.Path.Replace('\\', '/').Split('/');
@@ -130,14 +137,6 @@ namespace ArchiveButler
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //FileEntry entry = e.AddedItems[0] as FileEntry;
-            //Stream fileStream = entry.ZipEntry.Open();
-
-            //var listView = e.Source as ListView;
-            //listView.SelectedItems
-
-
-            //EntryPreview.Children.Clear();
             foreach (FileEntry item in e.RemovedItems)
             {
                 if (elements.ContainsKey(item)) EntryPreview.Children.Remove(elements[item]);
@@ -147,26 +146,22 @@ namespace ArchiveButler
             {
                 if (entry.ZipEntry != null)
                 {
-                    Stream fileStream = entry.ZipEntry.Open();
-                    Image image = new Image();
-                    image.Source = LoadImageFromStream(fileStream);
+                    try
+                    {
+                        Stream fileStream = entry.ZipEntry.Open();
+                        Image image = new Image();
+                        image.Source = LoadImageFromStream(fileStream);
 
-                    EntryPreview.Children.Add(image);
-                    elements[entry] = image;
+                        EntryPreview.Children.Add(image);
+                        elements[entry] = image;
+                    } catch
+                    { }
                 }
             }
         }
 
         private void GridView_ColumnClick(object sender, RoutedEventArgs e)
         {
-            //ListViewItemComparer sorter = GetListViewSorter(e.Column);
-
-            //listView.ListViewItemSorter = sorter;
-            //listView.Sort();
-            //ICollectionView collectionView = CollectionViewSource.GetDefaultView(FileListView.ItemsSource);
-            //collectionView.SortDescriptions.Clear();
-            //collectionView.SortDescriptions.Add(new SortDescription(
-
             GridViewColumnHeader column = sender as GridViewColumnHeader;
 
             ICollectionView collectionView = CollectionViewSource.GetDefaultView(FileListView.ItemsSource);

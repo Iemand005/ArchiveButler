@@ -33,28 +33,54 @@ namespace ArchiveButler
         }
         public string FullName { get; set; }
 
-        public bool Equals(FileEntry x, FileEntry y)
+        // override object.Equals
+        public override bool Equals(object obj)
         {
+            //       
+            // See the full list of guidelines at
+            //   http://go.microsoft.com/fwlink/?LinkID=85237  
+            // and also the guidance for operator== at
+            //   http://go.microsoft.com/fwlink/?LinkId=85238
+            //
 
-            //Check whether the compared objects reference the same data.
-            if (ReferenceEquals(x, y)) return true;
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
 
-            //Check whether any of the compared objects is null.
-            if (ReferenceEquals(x, null) || ReferenceEquals(y, null)) return false;
+            FileEntry fileEntry = obj as FileEntry;
 
-            //Check whether the products' properties are equal.
-            return x.Name == y.Name && x.Path == y.Path;
+            return Name == fileEntry.Name && Path == fileEntry.Path;
         }
 
-        public int GetHashCode(FileEntry fileEntry)
+        // override object.GetHashCode
+        public override int GetHashCode()
         {
-            //Check whether the object is null
-            if (ReferenceEquals(fileEntry, null)) return 0;
-
-            int hashFileEntryName = fileEntry.Name == null ? 0 : fileEntry.Name.GetHashCode();
-            int hashFileEntryPath = fileEntry.Path == null ? 0 : fileEntry.Path.GetHashCode();
-
-            return hashFileEntryName ^ hashFileEntryPath;
+            return Name.GetHashCode() ^ Path.GetHashCode();
         }
+
+        //public bool Equals(FileEntry x, FileEntry y)
+        //{
+
+        //    //Check whether the compared objects reference the same data.
+        //    if (ReferenceEquals(x, y)) return true;
+
+        //    //Check whether any of the compared objects is null.
+        //    if (ReferenceEquals(x, null) || ReferenceEquals(y, null)) return false;
+
+        //    //Check whether the products' properties are equal.
+        //    return x.Name == y.Name && x.Path == y.Path;
+        //}
+
+        //public int GetHashCode(FileEntry fileEntry)
+        //{
+        //    //Check whether the object is null
+        //    if (ReferenceEquals(fileEntry, null)) return 0;
+
+        //    int hashFileEntryName = fileEntry.Name == null ? 0 : fileEntry.Name.GetHashCode();
+        //    int hashFileEntryPath = fileEntry.Path == null ? 0 : fileEntry.Path.GetHashCode();
+
+        //    return hashFileEntryName ^ hashFileEntryPath;
+        //}
     }
 }

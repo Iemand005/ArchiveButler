@@ -24,7 +24,9 @@
                 </TreeView.ItemTemplate>
             </TreeView>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"></GridSplitter>
-            <ListView Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView">
+            <ListView Grid.Column="2" SelectionChanged="ListView_SelectionChanged" Name="FileListView" VirtualizingStackPanel.IsVirtualizing="True"
+          VirtualizingStackPanel.VirtualizationMode="Recycling"
+          ScrollViewer.IsDeferredScrollingEnabled="True">
                 <ListView.View>
                     <GridView>
                         <GridView.Columns>
@@ -34,7 +36,7 @@
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" ToolTip="{Binding Name}"/>
+                                        <TextBlock Text="{Binding Name}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
@@ -44,7 +46,7 @@
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding CreationTimeString}" ToolTip="{Binding CreationTimeString}"/>
+                                        <TextBlock Text="{Binding CreationTimeString}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
