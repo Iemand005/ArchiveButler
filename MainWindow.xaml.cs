@@ -20,6 +20,8 @@ using System.Data.SqlClient;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Controls.Primitives;
+using System.IO.Pipes;
+//using static System.Net.Mime.MediaTypeNames;
 
 namespace ArchiveButler
 {
@@ -111,7 +113,7 @@ namespace ArchiveButler
                         {
                             string newPath = Path.ChangeExtension(entry.FullName, null);
                             FileEntry fileEntry1 = FileEntries.GetEntry(entry);
-                            if (fileEntry1 == null || !fileEntry1.CreationTime.HasValue)
+                            if (fileEntry1 == null || !fileEntry1.Date.HasValue)
                             {
 
                                 JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
@@ -128,12 +130,12 @@ namespace ArchiveButler
                                 catch { }
 
 
-                                if (fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
+                                if (fileEntry != null && fileEntry.CreationTime != null) // file could also be a json file not related to a file, then the metadata file for it is .json.json lols
                                 {
                                     DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(fileEntry.CreationTime.Timestamp)).UtcDateTime;
 
 
-                                    FileEntries.AddEntry(newPath, dateTime);
+                                    FileEntries.SetEntryDate(newPath, dateTime);
                                     isFile = false;
                                 }
                             }
@@ -168,7 +170,16 @@ namespace ArchiveButler
 
         private FileEntryList LoadDatabase()
         {
-            return File.Exists(DatabaseName) ? JsonSerializer.Deserialize<FileEntryList>(File.ReadAllText(DatabaseName)) : new FileEntryList();
+            if (File.Exists(DatabaseName))
+            try
+            {
+                FileEntries.Merge(JsonSerializer.Deserialize<FileEntryList>(File.ReadAllText(DatabaseName)));
+                //return File.Exists(DatabaseName) ?  : FileEntries;
+            } catch
+            {
+                MessageBox.Show("failed to load database barf");
+            }
+            return FileEntries;
         }
 
         private ObservableCollection<DirectoryTreeNode> BuildDirectoryTree(FileEntryList fileEntries)
@@ -176,7 +187,7 @@ namespace ArchiveButler
             foreach (FileEntry fileEntry in fileEntries.Entries)
             {
                 var pathSegments = fileEntry.Path.Replace('\\', '/').Split('/');
-                pathSegments = fileEntry.FullName.Split('/');
+                //pathSegments = fileEntry.FullName.Split('/');
                 AddPathToTree(rootNodes, pathSegments, 0);
             }
 
@@ -197,6 +208,47 @@ namespace ArchiveButler
             }
 
             AddPathToTree(existingNode.Children, segments, index + 1);
+        }
+
+        private static readonly HashSet<string> ImageExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".ico"
+    };
+
+        private static readonly HashSet<string> TextExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ".txt", ".log", ".csv", ".json", ".xml", ".html"
+    };
+        private static readonly HashSet<string> VideoExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".m4v"
+    };
+
+        public UIElement OpenFileBasedOnExtension(string fileName, Stream stream)
+        {
+            UIElement element = new UIElement();
+            string extension = Path.GetExtension(fileName);
+
+            if (ImageExtensions.Contains(extension))
+            {
+                Image image = new Image();
+                image.Source = LoadImageFromStream(stream);
+                element = image;
+            }
+            else if (VideoExtensions.Contains(extension))
+            {
+                //MediaElement video = new MediaElement();
+                //video.Source
+            }
+            else
+            {
+                TextBlock textBlock = new TextBlock();
+                textBlock.Text = new StreamReader(stream).ReadToEnd();
+                element = textBlock;
+                //OpenAsText(fileName);
+            }
+
+            return element;
         }
 
         private BitmapImage LoadImageFromStream(Stream stream)
@@ -222,22 +274,19 @@ namespace ArchiveButler
                 if (elements.ContainsKey(item)) EntryPreview.Children.Remove(elements[item]);
             }
 
-            foreach (FileEntry entry in e.AddedItems)
-            {
-                if (entry.ZipEntry != null)
+            foreach (object item in e.AddedItems)
+                if (item is FileEntry)
                 {
-                    try
-                    {
-                        Stream fileStream = entry.ZipEntry.Open();
-                        Image image = new Image();
-                        image.Source = LoadImageFromStream(fileStream);
-
-                        EntryPreview.Children.Add(image);
-                        elements[entry] = image;
-                    } catch
-                    { }
+                    FileEntry entry = item as FileEntry;
+                    if (entry.ZipEntry != null) try
+                        {
+                            Stream fileStream = entry.ZipEntry.Open();
+                            var element = OpenFileBasedOnExtension(entry.Name, fileStream);
+                            EntryPreview.Children.Add(element);
+                            elements[entry] = element;
+                        }
+                        catch { }
                 }
-            }
         }
 
         private void GridView_ColumnClick(object sender, RoutedEventArgs e)

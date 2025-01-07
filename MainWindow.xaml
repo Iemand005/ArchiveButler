@@ -47,8 +47,43 @@
           ScrollViewer.CanContentScroll="True"
           ScrollViewer.VerticalScrollBarVisibility="Auto" GridLinesVisibility="Vertical">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name, Mode=OneTime}" Width="*" />
-                    <DataGridTextColumn Header="Date" Binding="{Binding CreationTimeString, Mode=OneTime}"  SortMemberPath="CreationTime" Width="*" />
+                    <DataGridTemplateColumn Header="Name" SortMemberPath="Name" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name, Mode=OneTime}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ZipEntry}" Value="{x:Null}">
+                                                    <Setter Property="Foreground" Value="DarkRed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Date" SortMemberPath="Date" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding CreationTimeString, Mode=OneTime}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Meta}" Value="True">
+                                                    <Setter Property="Foreground" Value="DarkGreen" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Meta}" Value="False">
+                                                    <Setter Property="Foreground" Value="Black" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 

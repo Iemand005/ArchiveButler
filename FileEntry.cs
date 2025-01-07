@@ -25,7 +25,7 @@ namespace ArchiveButler
                 return System.IO.Path.GetDirectoryName(FullName);
             }
         }
-        public DateTime? CreationTime { get; set; }
+        public DateTime? Date { get; set; }
 
         [JsonIgnore]
         public ZipArchiveEntry ZipEntry { get; set; }
@@ -35,7 +35,7 @@ namespace ArchiveButler
         {
             get
             {
-                return CreationTime != null ? CreationTime.ToString() : "undefined";
+                return Date != null ? Date.ToString() : "undefined";
             }
         }
         public string FullName { get; set; }
@@ -49,7 +49,10 @@ namespace ArchiveButler
             FullName = entry.FullName;
             Size = entry.Length;
             ZipEntry = entry;
+            Date = entry.LastWriteTime.UtcDateTime;
         }
+
+        public bool Meta { get; set; }
 
         // override object.Equals
         public override bool Equals(object obj)

@@ -40,20 +40,23 @@ namespace ArchiveButler
         public void AddEntry(ZipArchiveEntry entry)
         {
             FileEntry fileEntry = new FileEntry(entry);
-            if (!AddEntry(fileEntry) && fileEntry.CreationTime.HasValue)
+            if (!AddEntry(fileEntry))
             {
                 _entries.TryGetValue(fileEntry, out fileEntry);
                 fileEntry.ZipEntry = entry;
             }
         }
 
-        public void AddEntry(string fullName, DateTime? dateTime)
+        public void SetEntryDate(string fullName, DateTime? date)
         {
-            FileEntry entry = new FileEntry { FullName = fullName, CreationTime = dateTime };
-            if (!AddEntry(entry) && entry.CreationTime.HasValue)
+            FileEntry entry = new FileEntry { FullName = fullName, Date = date };
+            if (!AddEntry(entry))
             {
-                _entries.TryGetValue(entry, out entry);
-                entry.CreationTime = dateTime;
+                if (_entries.TryGetValue(entry, out entry))
+                {
+                    entry.Date = date;
+                    entry.Meta = true;
+                }
             }
         }
 
